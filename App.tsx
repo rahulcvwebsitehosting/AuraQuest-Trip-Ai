@@ -22,7 +22,8 @@ import {
   Linkedin,
   Globe,
   Milestone,
-  AlertCircle
+  AlertCircle,
+  Printer
 } from 'lucide-react';
 import { UserPreferences, TravelType, PaceType, CompleteItinerary } from './types';
 import { INTEREST_OPTIONS, DIETARY_OPTIONS, STEPS } from './constants';
@@ -45,7 +46,7 @@ const App: React.FC = () => {
     pace: PaceType.BALANCED,
     interests: [],
     dietary: ['No restrictions'],
-    budget: 50000, // Reasonable default for a trip
+    budget: 50000,
     email: '',
     additionalRequests: ''
   });
@@ -53,8 +54,6 @@ const App: React.FC = () => {
   const [itinerary, setItinerary] = useState<CompleteItinerary | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'dining' | 'tips' | 'budget'>('overview');
-
-  // Validation states
   const [showError, setShowError] = useState<string | null>(null);
 
   const getCurrency = (dest: string) => {
@@ -110,16 +109,12 @@ const App: React.FC = () => {
 
   const handleNext = () => {
     setShowError(null);
-
-    // Step 1 Validation: Destination is mandatory
     if (currentStep === 1) {
       if (!prefs.destination.trim()) {
         setShowError("Hold on! We need to know where you're going first.");
         return;
       }
     }
-
-    // Step 2 Validation: No time traveling
     if (currentStep === 2) {
       const start = new Date(prefs.startDate);
       const end = new Date(prefs.endDate);
@@ -128,7 +123,6 @@ const App: React.FC = () => {
         return;
       }
     }
-
     if (currentStep < 7) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -146,6 +140,10 @@ const App: React.FC = () => {
       alert("Neural sync error. Please retry your request.");
       setCurrentView('onboarding');
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const toggleInterest = (id: string) => {
@@ -540,13 +538,18 @@ const App: React.FC = () => {
     if (!itinerary) return null;
     return (
       <div className="min-h-screen bg-white">
-        <header className="h-20 glass sticky top-0 z-[100] border-b border-slate-100 flex items-center px-8 justify-between">
+        <header className="h-20 glass sticky top-0 z-[100] border-b border-slate-100 flex items-center px-8 justify-between no-print">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('landing')}>
             <Sparkles className="w-5 h-5 text-teal-500" />
             <span className="font-black text-xl tracking-tighter uppercase">AuraQuest AI</span>
           </div>
           <div className="flex items-center gap-4">
-             <button onClick={() => window.print()} className="px-5 py-2 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-widest transition-transform hover:scale-105">Download Guide</button>
+             <button 
+                onClick={handlePrint}
+                className="px-5 py-2 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-widest transition-transform hover:scale-105 flex items-center gap-2"
+             >
+                <Printer className="w-4 h-4" /> Save as PDF
+             </button>
           </div>
         </header>
 
@@ -563,7 +566,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex overflow-x-auto no-scrollbar gap-12 border-b border-slate-100 mb-12">
+          <div className="flex overflow-x-auto no-scrollbar gap-12 border-b border-slate-100 mb-12 no-print">
              {['Overview', 'Itinerary', 'Dining', 'Safety & Tips', 'Budget'].map((tab, i) => {
                const id = ['overview', 'itinerary', 'dining', 'tips', 'budget'][i];
                return (
@@ -577,8 +580,8 @@ const App: React.FC = () => {
           </div>
 
           <div className="animate-in fade-in duration-1000">
-            {activeTab === 'overview' && (
-              <div className="grid lg:grid-cols-3 gap-8">
+            {(activeTab === 'overview' || window.matchMedia('print').matches) && (
+              <div className="grid lg:grid-cols-3 gap-8 mb-16">
                 <div className="lg:col-span-2 space-y-8">
                    <div className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100">
                      <h3 className="text-2xl font-black uppercase italic mb-6">Stay: {itinerary.hotel.name}</h3>
@@ -629,8 +632,8 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'itinerary' && (
-              <div className="max-w-4xl mx-auto space-y-16">
+            {(activeTab === 'itinerary' || window.matchMedia('print').matches) && (
+              <div className="max-w-4xl mx-auto space-y-16 mb-16">
                  {itinerary.days.map((day, idx) => (
                    <div key={idx} className="relative group">
                       <div className="flex flex-col md:flex-row gap-12">
@@ -665,8 +668,8 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'dining' && (
-               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {(activeTab === 'dining' || window.matchMedia('print').matches) && (
+               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
                  {itinerary.diningRecommendations.map((rec, i) => (
                    <div key={i} className="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 hover:shadow-2xl transition-all group">
                       <div className="flex justify-between items-start mb-6">
@@ -681,8 +684,8 @@ const App: React.FC = () => {
                </div>
             )}
 
-            {activeTab === 'tips' && (
-              <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {(activeTab === 'tips' || window.matchMedia('print').matches) && (
+              <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
                 <div className="bg-[#0f172a] text-white p-12 rounded-[3rem]">
                    <ShieldAlert className="w-10 h-10 text-teal-400 mb-8" />
                    <h3 className="text-3xl font-black uppercase italic mb-8 tracking-tighter">Safety Rules</h3>
@@ -710,7 +713,7 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'budget' && (
+            {(activeTab === 'budget' || window.matchMedia('print').matches) && (
               <div className="grid lg:grid-cols-2 gap-12 items-center">
                  <div className="bg-slate-50 p-12 rounded-[3rem] border border-slate-100">
                     <h3 className="text-3xl font-black uppercase italic mb-10 tracking-tighter">Cost Breakdown</h3>
@@ -739,7 +742,7 @@ const App: React.FC = () => {
           </div>
         </main>
         
-        <footer className="mt-20 py-16 px-8 border-t border-slate-100 bg-slate-50 relative overflow-hidden">
+        <footer className="mt-20 py-16 px-8 border-t border-slate-100 bg-slate-50 relative overflow-hidden no-print">
           <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 blur-[80px] rounded-full pointer-events-none"></div>
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-12">
             <div className="space-y-6">
