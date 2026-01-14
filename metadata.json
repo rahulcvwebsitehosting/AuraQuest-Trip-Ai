@@ -1,0 +1,7 @@
+{
+  "name": "TripCraft AI",
+  "description": "An intelligent multi-agent travel planning platform that crafts personalized itineraries with flights, hotels, activities, and budget optimization.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
